@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONL Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1><i class="fas fa-file-code"></i> JSONL Visualizer</h1>
+                    <p>Upload and visualize your JSONL files with ease</p>
+                </div>
+                <div class="theme-toggle">
+                    <button id="themeToggle" class="theme-btn" title="Toggle theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-tabs">
+                <button class="tab-btn active" id="fileTab">Upload File</button>
+                <button class="tab-btn" id="textTab">Paste Text</button>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drop your JSONL file here</h3>
+                <p>or click to browse</p>
+                <input type="file" id="fileInput" accept=".jsonl,.json" hidden>
+            </div>
+            
+            <div class="text-input-area" id="textInputArea" style="display: none;">
+                <div class="text-input-header">
+                    <i class="fas fa-paste"></i>
+                    <h3>Paste your JSONL content</h3>
+                    <p>Paste your JSONL data directly into the text area below</p>
+                </div>
+                <textarea id="textInput" placeholder="Paste your JSONL content here...&#10;Example:&#10;{&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 30}&#10;{&quot;name&quot;: &quot;Jane&quot;, &quot;age&quot;: 25}"></textarea>
+                <div class="text-input-actions">
+                    <button id="processTextBtn" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Process Text
+                    </button>
+                    <button id="clearTextBtn" class="btn btn-secondary">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls" id="controls" style="display: none;">
+            <div class="control-group">
+                <label for="viewMode">View Mode:</label>
+                <select id="viewMode">
+                    <option value="table">Table View</option>
+                    <option value="tree">Tree View</option>
+                    <option value="json">JSON View</option>
+                    <option value="raw">Raw JSON</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="searchInput">Search:</label>
+                <input type="text" id="searchInput" placeholder="Search in data...">
+            </div>
+            
+            <div class="control-group">
+                <label for="filterKey">Filter by key:</label>
+                <select id="filterKey">
+                    <option value="">All keys</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button id="exportBtn" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+                <button id="clearBtn" class="btn btn-secondary">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <span class="stat-label">Total Records:</span>
+                <span class="stat-value" id="totalRecords">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">File Size:</span>
+                <span class="stat-value" id="fileSize">0 KB</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Filtered Records:</span>
+                <span class="stat-value" id="filteredRecords">0</span>
+            </div>
+        </div>
+
+        <div class="content" id="content" style="display: none;">
+            <div class="view-container">
+                <div id="tableView" class="view-content"></div>
+                <div id="treeView" class="view-content" style="display: none;"></div>
+                <div id="jsonView" class="view-content" style="display: none;"></div>
+                <div id="rawView" class="view-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="errorText"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
