@@ -77,6 +77,39 @@
                 </select>
             </div>
             
+            <div class="control-group column-control-group">
+                <label for="columnSelector">Columns</label>
+                <div class="column-selector-container">
+                    <button id="columnSelectorToggle" class="column-selector-toggle">
+                        <i class="fas fa-columns"></i>
+                        <span id="columnSelectorText">Select columns...</span>
+                        <span class="column-badge" id="columnBadge">0</span>
+                        <i class="fas fa-chevron-down selector-arrow"></i>
+                    </button>
+                    <div id="columnSelector" class="column-selector">
+                        <div class="selector-header">
+                            <div class="selector-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="columnSearch" placeholder="Search columns...">
+                            </div>
+                            <div class="selector-actions">
+                                <button id="selectAllColumns" class="action-btn select-all">
+                                    <i class="fas fa-check-double"></i>
+                                </button>
+                                <button id="deselectAllColumns" class="action-btn deselect-all">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="selector-body">
+                            <div id="columnList" class="column-list">
+                                <!-- Column items will be dynamically added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="control-group">
                 <button id="exportBtn" class="btn btn-primary">
                     <i class="fas fa-download"></i> Export Data

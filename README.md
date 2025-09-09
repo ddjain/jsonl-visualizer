@@ -41,6 +41,28 @@ JSONL Visualizer is a simple web application that helps you explore and understa
 - **Students**: Learn about JSONL format and data structure
 - **Anyone**: Who needs to view or understand JSONL files
 
+## 📸 Screenshots
+
+### 🎬 Demo GIF
+![JSONL Visualizer Demo](https://via.placeholder.com/800x400/667eea/ffffff?text=JSONL+Visualizer+Demo+GIF)
+*Watch the app in action - drag & drop, search, filter, and switch between view modes*
+
+### 🖼️ App Screenshots
+
+#### Light Theme
+![Light Theme - Table View](https://via.placeholder.com/600x400/f8f9fa/333333?text=Light+Theme+-+Table+View)
+*Clean table view with syntax highlighting*
+
+![Light Theme - JSON View](https://via.placeholder.com/600x400/f8f9fa/333333?text=Light+Theme+-+JSON+View)
+*Beautiful JSON syntax highlighting*
+
+#### Dark Theme
+![Dark Theme - Tree View](https://via.placeholder.com/600x400/2d2d2d/ffffff?text=Dark+Theme+-+Tree+View)
+*Hierarchical tree view in dark mode*
+
+![Dark Theme - Mobile View](https://via.placeholder.com/300x500/2d2d2d/ffffff?text=Mobile+Dark+Theme)
+*Responsive design on mobile devices*
+
 ## 🚀 Quick Start
 
 1. **Download** this repository

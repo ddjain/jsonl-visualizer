@@ -5,6 +5,8 @@ class JSONLVisualizer {
         this.allKeys = new Set();
         this.currentView = 'table';
         this.currentTheme = 'light';
+        this.visibleColumns = new Set(); // Track which columns are visible
+        this.columnSearchQuery = ''; // Track column search query
         
         this.initializeElements();
         this.attachEventListeners();
@@ -42,6 +44,15 @@ class JSONLVisualizer {
         this.treeView = document.getElementById('treeView');
         this.jsonView = document.getElementById('jsonView');
         this.rawView = document.getElementById('rawView');
+        this.columnList = document.getElementById('columnList');
+        this.columnBadge = document.getElementById('columnBadge');
+        this.columnSearch = document.getElementById('columnSearch');
+        this.selectAllColumns = document.getElementById('selectAllColumns');
+        this.deselectAllColumns = document.getElementById('deselectAllColumns');
+        this.columnSelector = document.getElementById('columnSelector');
+        this.columnSelectorToggle = document.getElementById('columnSelectorToggle');
+        this.columnSelectorText = document.getElementById('columnSelectorText');
+        this.selectorArrow = document.querySelector('.selector-arrow');
         
         this.totalRecords = document.getElementById('totalRecords');
         this.fileSize = document.getElementById('fileSize');
@@ -74,6 +85,15 @@ class JSONLVisualizer {
         this.filterKey.addEventListener('change', this.handleFilterChange.bind(this));
         this.exportBtn.addEventListener('click', this.exportData.bind(this));
         this.clearBtn.addEventListener('click', this.clearData.bind(this));
+        
+        // Column control events
+        this.columnSearch.addEventListener('input', this.handleColumnSearch.bind(this));
+        this.selectAllColumns.addEventListener('click', () => this.toggleAllColumns(true));
+        this.deselectAllColumns.addEventListener('click', () => this.toggleAllColumns(false));
+        this.columnSelectorToggle.addEventListener('click', this.toggleSelector.bind(this));
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', this.handleOutsideClick.bind(this));
     }
 
     handleDragOver(e) {
@@ -213,6 +233,7 @@ class JSONLVisualizer {
     parseJSONL(text) {
         this.data = [];
         this.allKeys.clear();
+        this.visibleColumns.clear();
         
         const lines = text.split('\n').filter(line => line.trim());
         
@@ -225,6 +246,9 @@ class JSONLVisualizer {
                 console.warn(`Error parsing line ${i + 1}:`, error.message);
             }
         }
+        
+        // Initialize all columns as visible by default
+        this.allKeys.forEach(key => this.visibleColumns.add(key));
         
         this.filteredData = [...this.data];
         this.updateFilterOptions();
@@ -251,6 +275,164 @@ class JSONLVisualizer {
             option.textContent = key;
             this.filterKey.appendChild(option);
         });
+        this.updateColumnSelector();
+    }
+
+    updateColumnSelector() {
+        this.columnList.innerHTML = '';
+        const sortedKeys = Array.from(this.allKeys).sort();
+        
+        // Filter keys based on search query
+        const filteredKeys = sortedKeys.filter(key => 
+            key.toLowerCase().includes(this.columnSearchQuery)
+        );
+        
+        if (filteredKeys.length === 0) {
+            this.columnList.innerHTML = '<div class="no-columns-message">No columns match your search</div>';
+            return;
+        }
+        
+        // Add items for each column
+        filteredKeys.forEach(key => {
+            const item = document.createElement('div');
+            item.className = `column-item ${this.visibleColumns.has(key) ? 'selected' : ''}`;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `column-${key}`;
+            checkbox.checked = this.visibleColumns.has(key);
+            checkbox.addEventListener('change', (e) => this.toggleColumn(key, e.target.checked));
+            
+            const label = document.createElement('label');
+            label.htmlFor = `column-${key}`;
+            label.textContent = key;
+            
+            // Add type indicator for nested objects
+            if (key.includes('.')) {
+                const typeSpan = document.createElement('span');
+                typeSpan.className = 'column-type';
+                typeSpan.textContent = 'nested';
+                item.appendChild(checkbox);
+                item.appendChild(label);
+                item.appendChild(typeSpan);
+            } else {
+                item.appendChild(checkbox);
+                item.appendChild(label);
+            }
+            
+            this.columnList.appendChild(item);
+        });
+        
+        this.updateColumnBadge();
+    }
+
+    toggleAllColumns(selectAll) {
+        Array.from(this.allKeys).forEach(key => {
+            this.visibleColumns[selectAll ? 'add' : 'delete'](key);
+        });
+        this.updateColumnSelector();
+        this.updateColumnBadge();
+        this.renderData();
+    }
+
+    toggleColumn(key, isVisible) {
+        if (isVisible) {
+            this.visibleColumns.add(key);
+        } else {
+            this.visibleColumns.delete(key);
+        }
+        this.updateColumnBadge();
+        this.renderData();
+    }
+
+    handleColumnSearch() {
+        this.columnSearchQuery = this.columnSearch.value.toLowerCase();
+        this.updateColumnSelector();
+    }
+
+    updateColumnBadge() {
+        const selectedCount = this.visibleColumns.size;
+        const totalCount = this.allKeys.size;
+        this.columnBadge.textContent = selectedCount;
+        
+        // Update selector text
+        if (selectedCount === 0) {
+            this.columnSelectorText.textContent = 'Select columns...';
+        } else if (selectedCount === totalCount) {
+            this.columnSelectorText.textContent = 'All columns';
+        } else {
+            this.columnSelectorText.textContent = `${selectedCount} selected`;
+        }
+    }
+
+    toggleSelector(e) {
+        e.stopPropagation();
+        this.columnSelector.classList.toggle('active');
+        this.selectorArrow.classList.toggle('rotated');
+        
+        if (this.columnSelector.classList.contains('active')) {
+            this.columnSearch.focus();
+        }
+    }
+
+    handleOutsideClick(e) {
+        if (!this.columnSelector.contains(e.target) && !this.columnSelectorToggle.contains(e.target)) {
+            this.columnSelector.classList.remove('active');
+            this.selectorArrow.classList.remove('rotated');
+        }
+    }
+
+    copyRowToClipboard(rowIndex) {
+        if (rowIndex < 0 || rowIndex >= this.filteredData.length) {
+            this.showError('Invalid row index');
+            return;
+        }
+
+        const rowData = this.filteredData[rowIndex];
+        const jsonString = JSON.stringify(rowData, null, 2);
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(jsonString).then(() => {
+            this.showCopySuccess(rowIndex);
+        }).catch(err => {
+            // Fallback for older browsers
+            this.fallbackCopyToClipboard(jsonString, rowIndex);
+        });
+    }
+
+    fallbackCopyToClipboard(text, rowIndex) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            this.showCopySuccess(rowIndex);
+        } catch (err) {
+            this.showError('Failed to copy to clipboard');
+        }
+        
+        document.body.removeChild(textArea);
+    }
+
+    showCopySuccess(rowIndex) {
+        // Find the copy button for this row
+        const copyBtn = document.querySelector(`tr[data-row-index="${rowIndex}"] .copy-row-btn`);
+        if (copyBtn) {
+            const originalIcon = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalIcon;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        }
     }
 
     handleViewModeChange() {
@@ -346,19 +528,32 @@ class JSONLVisualizer {
         }
 
         const allKeys = this.getAllKeysFromData(this.filteredData);
+        // Filter to only show visible columns
+        const visibleKeys = allKeys.filter(key => this.visibleColumns.has(key));
+        
+        if (visibleKeys.length === 0) {
+            this.tableView.innerHTML = '<p>No columns selected. Please select at least one column to display.</p>';
+            return;
+        }
+        
         let html = '<div class="table-container"><table><thead><tr>';
         
-        allKeys.forEach(key => {
+        visibleKeys.forEach(key => {
             html += `<th>${this.escapeHtml(key)}</th>`;
         });
-        html += '</tr></thead><tbody>';
+        html += '<th class="copy-column">Actions</th></tr></thead><tbody>';
         
         this.filteredData.forEach((item, index) => {
-            html += `<tr>`;
-            allKeys.forEach(key => {
+            html += `<tr data-row-index="${index}">`;
+            visibleKeys.forEach(key => {
                 const value = this.getNestedValue(item, key);
                 html += `<td>${this.formatCellValue(value)}</td>`;
             });
+            html += `<td class="copy-cell">
+                <button class="copy-row-btn" onclick="jsonlVisualizer.copyRowToClipboard(${index})" title="Copy row to clipboard">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </td>`;
             html += '</tr>';
         });
         
@@ -562,11 +757,16 @@ class JSONLVisualizer {
         this.data = [];
         this.filteredData = [];
         this.allKeys.clear();
+        this.visibleColumns.clear();
+        this.columnSearchQuery = '';
         
         this.fileInput.value = '';
         this.textInput.value = '';
         this.searchInput.value = '';
+        this.columnSearch.value = '';
         this.filterKey.innerHTML = '<option value="">All keys</option>';
+        this.columnList.innerHTML = '';
+        this.columnBadge.textContent = '0';
         this.viewMode.value = 'table';
         
         this.hideControls();
@@ -623,5 +823,5 @@ class JSONLVisualizer {
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new JSONLVisualizer();
+    window.jsonlVisualizer = new JSONLVisualizer();
 });
